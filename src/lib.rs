@@ -36,7 +36,7 @@ impl UptimePusher {
 	pub fn spawn_background(self) {
 		std::thread::spawn(move || loop {
 			let e = self.push_ok();
-			if e.is_err() {
+			if e.is_err() && self.silent {
 				let _ = dbg!(e);
 			}
 
