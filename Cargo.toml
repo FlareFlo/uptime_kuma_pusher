@@ -1,0 +1,9 @@
+[package]
+name = "uptime_kuma_pusher"
+authors = ["FlareFlo"]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+url = "2.5"
