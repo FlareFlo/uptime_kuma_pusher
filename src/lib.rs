@@ -10,12 +10,13 @@ use url::Url;
 pub struct UptimePusher {
 	url:             Url,
 	heartbeat_delay: Duration,
+	silent:          bool,
 }
 
 impl UptimePusher {
 	/// Constructs new pusher, panics if any configuration is invalid.
 	/// If anyone caught this error it would make the concept of an uptime pusher redundant.
-	pub fn new(url: &str) -> Self {
+	pub fn new(url: &str, silent: bool) -> Self {
 		let output = Command::new("curl").args(&["--version"]).output().unwrap();
 		if !output.status.success() {
 			panic!(
@@ -24,17 +25,20 @@ impl UptimePusher {
 			);
 		}
 		Self {
-			url:             Url::parse(url).unwrap(),
+			url: Url::parse(url).unwrap(),
 			// Uptime Kuma expects a heartbeat every 60 seconds, 5 seconds of ping/jitter is plentiful
 			heartbeat_delay: Duration::from_secs(55),
+			silent,
 		}
 	}
 
 	/// Spawns thread that polls server regularly with UP status
 	pub fn spawn_background(self) {
 		std::thread::spawn(move || loop {
-			// Drop the error, if we cant reach the server
-			let _ = self.push_ok();
+			let e = self.push_ok();
+			if e.is_err() {
+				let _ = dbg!(e);
+			}
 
 			let now = Instant::now();
 			if let Some(dur) = (now + self.heartbeat_delay).checked_duration_since(now) {
