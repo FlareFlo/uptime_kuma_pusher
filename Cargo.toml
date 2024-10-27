@@ -4,6 +4,9 @@ authors = ["FlareFlo"]
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
+description = "simple pusher client for https://uptime.kuma.pet/"
+repository = "https://github.com/FlareFlo/uptime_kuma_pusher"
+readme = "README.md"
 
 [dependencies]
 url = "2.5"
