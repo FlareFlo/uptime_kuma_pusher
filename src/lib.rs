@@ -54,11 +54,25 @@ impl UptimePusher {
 			.append_pair("status", if status_ok { "up" } else { "down" })
 			.append_pair("msg", msg);
 
-		Command::new("curl")
-			.args(&[url.to_string()])
+		let mut b = Command::new("curl")
+			.args(&[&url.to_string(), "--max-time", "8"])
 			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.spawn()?;
+		sleep(Duration::from_secs(10));
+		match b.try_wait() {
+			Ok(v) => {
+				if v.is_none() && !self.silent {
+					eprintln!("Curl did not exit, reason unknown")
+				}
+			},
+			Err(e) => {
+				if !self.silent {
+					eprintln!("curl failed to push status: {}", e);
+				}
+			},
+		}
+		let _ = b.kill();
 		Ok(())
 	}
 
