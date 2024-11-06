@@ -1,6 +1,5 @@
 use std::{
 	io,
-	process::{Command, Stdio},
 	thread::sleep,
 	time::{Duration, Instant},
 };
@@ -17,13 +16,6 @@ impl UptimePusher {
 	/// Constructs new pusher, panics if any configuration is invalid.
 	/// If anyone caught this error it would make the concept of an uptime pusher redundant.
 	pub fn new(url: &str, silent: bool) -> Self {
-		let output = Command::new("curl").args(&["--version"]).output().unwrap();
-		if !output.status.success() {
-			panic!(
-				"failed to check for curl installation: {}",
-				String::from_utf8_lossy(&output.stderr)
-			);
-		}
 		Self {
 			url: Url::parse(url).unwrap(),
 			// Uptime Kuma expects a heartbeat every 60 seconds, 5 seconds of ping/jitter is plentiful
@@ -54,25 +46,9 @@ impl UptimePusher {
 			.append_pair("status", if status_ok { "up" } else { "down" })
 			.append_pair("msg", msg);
 
-		let mut b = Command::new("curl")
-			.args(&[&url.to_string(), "--max-time", "8"])
-			.stdout(Stdio::null())
-			.stderr(Stdio::null())
-			.spawn()?;
-		sleep(Duration::from_secs(10));
-		match b.try_wait() {
-			Ok(v) => {
-				if v.is_none() && !self.silent {
-					eprintln!("Curl did not exit, reason unknown")
-				}
-			},
-			Err(e) => {
-				if !self.silent {
-					eprintln!("curl failed to push status: {}", e);
-				}
-			},
-		}
-		let _ = b.kill();
+		let _ = ureq::get(url.as_str())
+			.timeout(Duration::from_secs(10))
+			.call();
 		Ok(())
 	}
 

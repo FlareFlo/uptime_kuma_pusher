@@ -9,4 +9,5 @@ repository = "https://github.com/FlareFlo/uptime_kuma_pusher"
 readme = "README.md"
 
 [dependencies]
+ureq = "2.10.1"
 url = "2.5"
