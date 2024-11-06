@@ -46,9 +46,14 @@ impl UptimePusher {
 			.append_pair("status", if status_ok { "up" } else { "down" })
 			.append_pair("msg", msg);
 
-		let _ = ureq::get(url.as_str())
+		let res = ureq::get(url.as_str())
 			.timeout(Duration::from_secs(10))
 			.call();
+		if let Err(res) = res {
+			if !self.silent {
+				println!("Failed to push uptime-kuma: {}", res);
+			}
+		}
 		Ok(())
 	}
 
@@ -66,7 +71,7 @@ mod tests {
 
 	#[test]
 	fn simple_push() {
-		let p = UptimePusher::new("foobar");
+		let p = UptimePusher::new("foobar", false);
 		p.spawn_background();
 		sleep(Duration::from_secs(100));
 	}
